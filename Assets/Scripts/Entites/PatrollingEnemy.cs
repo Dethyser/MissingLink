@@ -30,52 +30,50 @@ public class PatrollingEnemy : Entity {
         viewDirection = startdirection;
         ChangeViewDirection();
     }
-    void Update()
-    {
-        
-        if(CheckForPlayer > 0.0f) {
+    void Update() {
+        if (CheckForPlayer > 0.0f) {
             CheckForPlayer -= Time.deltaTime;
         }
         else {
             direction = Vector3.zero;
-            if (viewRange.PlayerInViewRange() != null) {
-                CheckForPlayer = 1.0f;
-                player = viewRange.PlayerInViewRange();
-                direction = player.transform.position - transform.position;
-            }
-            else if (player != null) {
-                if ((player.transform.position - transform.position).magnitude > followDistance) {
+            if (!knockbacked) {
+                if (viewRange.PlayerInViewRange() != null) {
                     CheckForPlayer = 1.0f;
-                    player = null;
+                    player = viewRange.PlayerInViewRange();
+                    direction = player.transform.position - transform.position;
+                }
+                else if (player != null) {
+                    if ((player.transform.position - transform.position).magnitude > followDistance) {
+                        CheckForPlayer = 1.0f;
+                        player = null;
+                    }
+                    else {
+                        CheckForPlayer = 1.0f;
+                        direction = player.transform.position - transform.position;
+                        ChangeViewDirection();
+                    }
                 }
                 else {
-                    CheckForPlayer = 1.0f;
-                    direction = player.transform.position - transform.position;
-                    ChangeViewDirection();
-                }
-            }
-            else {
-                if (wallCheck.FoundWall()) {
-                    TurnAround();
-                }
-                switch (viewDirection) {
+                    switch (viewDirection) {
 
-                    case ViewDirection.up:
-                        direction = Vector3.up;
-                        break;
-                    case ViewDirection.down:
-                        direction = Vector3.down;
-                        break;
-                    case ViewDirection.right:
-                        direction = Vector3.right;
-                        break;
-                    case ViewDirection.left:
-                        direction = Vector3.left;
-                        break;
-                    default:
-                        break;
+                        case ViewDirection.up:
+                            direction = Vector3.up;
+                            break;
+                        case ViewDirection.down:
+                            direction = Vector3.down;
+                            break;
+                        case ViewDirection.right:
+                            direction = Vector3.right;
+                            break;
+                        case ViewDirection.left:
+                            direction = Vector3.left;
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
+            
         }
         controller.MoveEntity(direction, movementSpeed);
     }
@@ -130,6 +128,9 @@ public class PatrollingEnemy : Entity {
         if (collision.gameObject.CompareTag("Player")) {
             collision.gameObject.GetComponent<Entity>().TakeDamage(damageAmount, knockbackStrength, transform.position);
         }
+        else if(!collision.gameObject.CompareTag("Projectile")) {
+            TurnAround();
+        }
     }
 
     protected override void Die() {
@@ -139,5 +140,16 @@ public class PatrollingEnemy : Entity {
 
     private void DropItem() {
 
+    }
+
+    private IEnumerator CheckIfStandingStill() {
+
+        for (float t = 0; t < 0.01f; t += Time.deltaTime) {
+            yield return null;
+        }
+
+        if(GetComponent<Rigidbody2D>().velocity.magnitude <= 0.05f) {
+            TurnAround();
+        }
     }
 }

@@ -25,8 +25,8 @@ public class PlayerMovement : Entity {
     }
 
     private void Update() {
-        
-        if (canMove) {
+        direction = Vector2.zero;
+        if (canMove && !knockbacked) {
             direction = Vector3.up * Input.GetAxisRaw("Vertical") + Vector3.right * Input.GetAxisRaw("Horizontal");
             ChangeViewDirection();
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -109,7 +109,6 @@ public class PlayerMovement : Entity {
     private IEnumerator SwingSword() {
 
         canMove = false;
-        direction = Vector3.zero;
 
         for (float t = 0; t < 0.25f; t += Time.deltaTime) {
             yield return null;
